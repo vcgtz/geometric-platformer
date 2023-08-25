@@ -33,15 +33,23 @@ class MyGame(arcade.Window):
         # Separate variable that holds the player sprite
         self.player_sprite = None
 
-        # Out physics engine
+        # Our physics engine
         self.physics_engine = None
+
+        # A Camera that can be used for scrolling the screen
+        self.camera = None
 
         arcade.set_background_color(arcade.csscolor.GHOST_WHITE)
 
     def setup(self):
         """Set up the game here. Call this function to restart the game."""
+        # Set up the Camera
+        self.camera = arcade.Camera(self.width, self.height)
+
         # Initialize Scene
         self.scene = arcade.Scene()
+
+        # Create the Sprite lists
         self.scene.add_sprite_list("Player")
         self.scene.add_sprite_list("Walls", use_spatial_hash=True)
 
@@ -82,6 +90,9 @@ class MyGame(arcade.Window):
         # Draw our scene
         self.scene.draw()
 
+        # Activate our Camera
+        self.camera.use()
+
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed"""
         if key == arcade.key.UP or key == arcade.key.W:
@@ -99,10 +110,28 @@ class MyGame(arcade.Window):
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.player_sprite.change_x = 0
 
+    def center_camera_to_player(self):
+        screen_center_x = self.player_sprite.center_x - (self.camera.viewport_width / 2)
+        screen_center_y = self.player_sprite.center_y - (self.camera.viewport_height / 2)
+
+        # Don't let camera travel past 0
+        if screen_center_x < 0:
+            screen_center_x = 0
+
+        if screen_center_y < 0:
+            screen_center_y = 0
+
+        player_centered = screen_center_x, screen_center_y
+
+        self.camera.move_to(player_centered)
+
     def on_update(self, delta_time):
         """Movement and game logic"""
         # Move the player with the physics engine
         self.physics_engine.update()
+
+        # Position the Camera
+        self.center_camera_to_player()
 
 
 def main():
